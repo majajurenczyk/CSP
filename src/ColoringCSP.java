@@ -1,9 +1,11 @@
 import java.util.*;
 
+import cspbase.*;
 import geometrics.Line;
 import geometrics.Point;
 
 public class ColoringCSP extends CSP {
+
     public ColoringCSP(ArrayList<Variable> vars, ArrayList<Constraint> cons, Domain dom) {
         super(vars, cons, dom);
     }
@@ -13,55 +15,47 @@ public class ColoringCSP extends CSP {
     }
 
     public void initRandomProblem(int numberOfColors, int numberOfRegions, int allRegionsHeight, int allRegionsWidth){
+        //INIT DOMAIN 
         ArrayList<Value<Integer>> colors = new ArrayList<>();
         for(int i = 0; i < numberOfColors; i++){
             colors.add(new Value<>(i));
         }
         this.domain = new Domain<>(colors);
+        
+        //INIT VARIABLES
         this.variables = new ArrayList<>();
-
-        ArrayList<Point> drawnPoints = drawPoints(numberOfRegions, allRegionsHeight, allRegionsWidth);
+        ArrayList<Point> drawnPoints = drawRandomProblemPoints(numberOfRegions, allRegionsHeight, allRegionsWidth);
         for (Point p: drawnPoints) {
             this.variables.add(new Variable<>(p));
         }
 
+        //INIT CONSTRAINTS
         ArrayList<Line> lines = initRandomProblemLines(drawnPoints);
         this.constraints = new ArrayList<>();
-
         for (Line line: lines) {
             this.constraints.add(new ColoringConstraint(getPointVariable(line.getStart()), getPointVariable(line.getEnd())));
         }
     }
-
-    public Variable getPointVariable(Point p){
-        for (Variable var: this.variables) {
-            if(var.getRepresentation().equals(p)){
-                return var;
-            }
-        }
-        return null;
-    }
-
-
-    public ArrayList<Line> initRandomProblemLines(ArrayList<Point> drawnPoints){
+    
+    //INITIALIZE PROBLEM METHODS
+    private  ArrayList<Line> initRandomProblemLines(ArrayList<Point> drawnPoints){ //CREATING CONNECTIONS TILL STOP CONDITION(NO AVAILABLE MOVES)
         Random rand = new Random();
         ArrayList<Line> lines = new ArrayList<>();
-        HashMap<Point, ArrayList<Point>> availableConn = getInitAvailableConnections(drawnPoints);
+        HashMap<Point, ArrayList<Point>> availableConn = getRandomProblemInitAvailableConnections(drawnPoints);
 
-        while (!endInitCondition(availableConn)){
+        while (!randomProblemInitStopCondition(availableConn)){
             int randomIndex = rand.nextInt(drawnPoints.size());
             Point start = drawnPoints.get(randomIndex);
             if(availableConn.get(start).size() != 0){
                 Line newLine = new Line(start, availableConn.get(start).get(0));
-                updateAvailableMoves(availableConn, newLine);
+                updateRandomProblemAvailableConnections(availableConn, newLine);
                 lines.add(newLine);
             }
         }
-        System.out.println(lines);
         return lines;
     }
 
-    public HashMap<Point, ArrayList<Point>> getInitAvailableConnections(ArrayList<Point> drawnPoints){
+    private HashMap<Point, ArrayList<Point>> getRandomProblemInitAvailableConnections(ArrayList<Point> drawnPoints){ //POINTS AVAILABLE  TO MAKE CONNECTION SORTED BY DISTANCE
         HashMap<Point, ArrayList<Point>> result = new HashMap<>();
         for(Point point: drawnPoints){
             ArrayList<Point> availablePoints = new ArrayList<>();
@@ -76,22 +70,20 @@ public class ColoringCSP extends CSP {
         return result;
     }
 
-    public void updateAvailableMoves(HashMap<Point, ArrayList<Point>> availableMoves, Line line){
-        Iterator it = availableMoves.entrySet().iterator();
-        while (it.hasNext()){
-            Map.Entry pair = (Map.Entry)it.next();
-            Point actPoint = (Point)(pair.getKey());
+    private void updateRandomProblemAvailableConnections(HashMap<Point, ArrayList<Point>> availableMoves, Line line){ //DELETE AVAILABLE POINTS TO REACH BASED ON ADDED LINE
+        for (Map.Entry<Point, ArrayList<Point>> pointArrayListEntry : availableMoves.entrySet()) {
+            Point actPoint = (Point) (((Map.Entry) pointArrayListEntry).getKey());
             ArrayList<Point> actPointAvailableMoves = new ArrayList<>(availableMoves.get(actPoint));
-            for (Point p: actPointAvailableMoves) {
+            for (Point p : actPointAvailableMoves) {
                 Line checkLine = new Line(actPoint, p);
-                if(line.intersects(checkLine) || line.equals(checkLine)){
+                if (line.intersects(checkLine) || line.equals(checkLine)) {
                     availableMoves.get(actPoint).remove(p);
                 }
             }
         }
     }
 
-    public boolean endInitCondition(HashMap<Point, ArrayList<Point>> availableMoves){
+    private boolean randomProblemInitStopCondition(HashMap<Point, ArrayList<Point>> availableMoves){ //CHECK IF END OF INITIALIZING
         for (Map.Entry<Point, ArrayList<Point>> pointArrayListEntry : availableMoves.entrySet()) {
             if (availableMoves.get((Point) (((Map.Entry) pointArrayListEntry).getKey())).size() > 0) {
                 return false;
@@ -100,7 +92,7 @@ public class ColoringCSP extends CSP {
         return true;
     }
 
-    private ArrayList<Point> drawPoints(int numberOfPoints, int regionHeight, int regionWidth){
+    private ArrayList<Point> drawRandomProblemPoints(int numberOfPoints, int regionHeight, int regionWidth){ //DRAW POINTS
         Random rand = new Random();
         ArrayList<Point> result = new ArrayList<>();
         while (result.size() != numberOfPoints) {
@@ -110,6 +102,15 @@ public class ColoringCSP extends CSP {
             }
         }
         return result;
+    }
+
+    private Variable getPointVariable(Point p){
+        for (Variable var: this.variables) {
+            if(var.getRepresentation().equals(p)){
+                return var;
+            }
+        }
+        return null;
     }
 
     public void initExampleProblem() {
@@ -174,16 +175,14 @@ public class ColoringCSP extends CSP {
     public static void main(String[] args) {
         //PROBLEM
         ColoringCSP coloringProblem = new ColoringCSP();
-        //coloringProblem.initExampleProblem();
         coloringProblem.initRandomProblem(3, 5, 5, 5);
 
-        HashMap<Variable, Value> assignments = new HashMap<>();
-        //ArrayList<LinkedHashMap<Variable, Value>> allAssignments = new ArrayList<>();
-        boolean res = coloringProblem.solveWithBacktracking(assignments);
+        ArrayList<HashMap<Variable, Value>> allAss = new ArrayList<>();
+        coloringProblem.solveWithBacktrackingAll(allAss);
 
-        if(res)
-            System.out.println(assignments);
-        else
-            System.out.println("error");
+        for (HashMap ass : allAss) {
+            System.out.println(ass);
+            System.out.println("====");
+        }
     }
 }

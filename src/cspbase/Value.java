@@ -1,3 +1,5 @@
+package cspbase;
+
 public class Value <T> {
     private T value;
 

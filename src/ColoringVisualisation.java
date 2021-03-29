@@ -1,3 +1,6 @@
+import cspbase.Constraint;
+import cspbase.Value;
+import cspbase.Variable;
 import geometrics.Point;
 import javafx.application.Application;
 import javafx.scene.Group;
@@ -5,41 +8,23 @@ import javafx.scene.Scene;
 import javafx.scene.paint.Color;
 import javafx.scene.shape.Line;
 import javafx.stage.Stage;
-
 import java.util.*;
 
-public class ColorVisualisation extends Application {
+public class ColoringVisualisation extends Application {
 
-    private Scene drawBoard(){
-        //COLORS
-        Color[] colors = new Color[10];
-        colors[0] = Color.RED;
-        colors[1] = Color.BLUEVIOLET;
-        colors[2] = Color.CYAN;
-        colors[4] = Color.DARKMAGENTA;
-        colors[3] = Color.DEEPPINK;
-        colors[5] = Color.DARKOLIVEGREEN;
-        colors[6] = Color.DARKBLUE;
-        colors[7] = Color.DARKTURQUOISE;
-        colors[8] = Color.FUCHSIA;
-        colors[9] = Color.DIMGREY;
-
+    private Scene drawBoard() {
         //SOLUTION
         ColoringCSP coloringProblem = new ColoringCSP();
-        coloringProblem.initRandomProblem(5, 30, 10, 10);
+        coloringProblem.initRandomProblem(8, 50, 10, 10);
 
+        //COLORS
+        Color [] colors = getColors();
         HashMap<Variable, Value> assignments = new HashMap<>();
         boolean res = coloringProblem.solveWithBacktracking(assignments);
 
-        System.out.println("WYNIK: " + res);
-
         Group gr = new Group();
+
         if(res) {
-
-            //System.out.println(assignments);
-
-            System.out.println(coloringProblem.getVariables());
-
             for (Variable var : coloringProblem.getVariables()) {
                 Point actPoint = (Point) (var.getRepresentation());
                 int varColor = (int) (assignments.get(var).getValue());
@@ -69,17 +54,27 @@ public class ColorVisualisation extends Application {
 
     @Override
     public void start(Stage primaryStage) throws Exception {
-        //Setting title to the scene
         primaryStage.setTitle("Visualisation");
-
-        //Adding the scene to the stage
         primaryStage.setScene(drawBoard());
-
-        //Displaying the contents of a scene
         primaryStage.show();
     }
 
-    public static void main(String[] args){
+    private Color [] getColors(){
+        Color[] colors = new Color[10];
+        colors[0] = Color.RED;
+        colors[1] = Color.BLUEVIOLET;
+        colors[2] = Color.CYAN;
+        colors[4] = Color.DARKMAGENTA;
+        colors[3] = Color.DEEPPINK;
+        colors[5] = Color.DARKOLIVEGREEN;
+        colors[6] = Color.DARKBLUE;
+        colors[7] = Color.DARKTURQUOISE;
+        colors[8] = Color.FUCHSIA;
+        colors[9] = Color.DIMGREY;
+        return colors;
+    }
+
+    public static void main(String[] args) {
         launch(args);
     }
 }
