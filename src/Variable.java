@@ -1,11 +1,11 @@
-public class Variable {
+public class Variable<T> {
     private static int ID = 1;
 
     private int id;
-    private String name;
+    private T representation;
 
-    public Variable(String name){
-        this.name = name;
+    public Variable(T representation){
+        this.representation = representation;
         this.id = ID;
 
         ID++;
@@ -15,12 +15,12 @@ public class Variable {
         return id;
     }
 
-    public String getName() {
-        return name;
+    public T getRepresentation() {
+        return representation;
     }
 
     @Override
     public String toString() {
-        return name;
+        return representation.toString();
     }
 }

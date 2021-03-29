@@ -1,6 +1,4 @@
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.Random;
+import java.util.*;
 
 import geometrics.Line;
 import geometrics.Point;
@@ -14,9 +12,92 @@ public class ColoringCSP extends CSP {
         super();
     }
 
-    public void initRandomProblem(int numberOfReg, int allRegHeight, int allRegWidth) {
-        ArrayList<Point> points = drawPoints(numberOfReg, allRegHeight, allRegWidth);
+    public void initRandomProblem(int numberOfColors, int numberOfRegions, int allRegionsHeight, int allRegionsWidth){
+        ArrayList<Value<Integer>> colors = new ArrayList<>();
+        for(int i = 0; i < numberOfColors; i++){
+            colors.add(new Value<>(i));
+        }
+        this.domain = new Domain<>(colors);
+        this.variables = new ArrayList<>();
 
+        ArrayList<Point> drawnPoints = drawPoints(numberOfRegions, allRegionsHeight, allRegionsWidth);
+        for (Point p: drawnPoints) {
+            this.variables.add(new Variable<>(p));
+        }
+
+        ArrayList<Line> lines = initRandomProblemLines(drawnPoints);
+        this.constraints = new ArrayList<>();
+
+        for (Line line: lines) {
+            this.constraints.add(new ColoringConstraint(getPointVariable(line.getStart()), getPointVariable(line.getEnd())));
+        }
+    }
+
+    public Variable getPointVariable(Point p){
+        for (Variable var: this.variables) {
+            if(var.getRepresentation().equals(p)){
+                return var;
+            }
+        }
+        return null;
+    }
+
+
+    public ArrayList<Line> initRandomProblemLines(ArrayList<Point> drawnPoints){
+        Random rand = new Random();
+        ArrayList<Line> lines = new ArrayList<>();
+        HashMap<Point, ArrayList<Point>> availableConn = getInitAvailableConnections(drawnPoints);
+
+        while (!endInitCondition(availableConn)){
+            int randomIndex = rand.nextInt(drawnPoints.size());
+            Point start = drawnPoints.get(randomIndex);
+            if(availableConn.get(start).size() != 0){
+                Line newLine = new Line(start, availableConn.get(start).get(0));
+                updateAvailableMoves(availableConn, newLine);
+                lines.add(newLine);
+            }
+        }
+        System.out.println(lines);
+        return lines;
+    }
+
+    public HashMap<Point, ArrayList<Point>> getInitAvailableConnections(ArrayList<Point> drawnPoints){
+        HashMap<Point, ArrayList<Point>> result = new HashMap<>();
+        for(Point point: drawnPoints){
+            ArrayList<Point> availablePoints = new ArrayList<>();
+            for (Point anotherPoint: drawnPoints) {
+                if(!point.equals(anotherPoint)){
+                    availablePoints.add(new Point(anotherPoint.x, anotherPoint.y));
+                }
+            }
+            availablePoints.sort((p1, p2) -> Double.compare((p1.distance(point)), (p2.distance(point))));
+            result.put(point, availablePoints);
+        }
+        return result;
+    }
+
+    public void updateAvailableMoves(HashMap<Point, ArrayList<Point>> availableMoves, Line line){
+        Iterator it = availableMoves.entrySet().iterator();
+        while (it.hasNext()){
+            Map.Entry pair = (Map.Entry)it.next();
+            Point actPoint = (Point)(pair.getKey());
+            ArrayList<Point> actPointAvailableMoves = new ArrayList<>(availableMoves.get(actPoint));
+            for (Point p: actPointAvailableMoves) {
+                Line checkLine = new Line(actPoint, p);
+                if(line.intersects(checkLine) || line.equals(checkLine)){
+                    availableMoves.get(actPoint).remove(p);
+                }
+            }
+        }
+    }
+
+    public boolean endInitCondition(HashMap<Point, ArrayList<Point>> availableMoves){
+        for (Map.Entry<Point, ArrayList<Point>> pointArrayListEntry : availableMoves.entrySet()) {
+            if (availableMoves.get((Point) (((Map.Entry) pointArrayListEntry).getKey())).size() > 0) {
+                return false;
+            }
+        }
+        return true;
     }
 
     private ArrayList<Point> drawPoints(int numberOfPoints, int regionHeight, int regionWidth){
@@ -33,13 +114,13 @@ public class ColoringCSP extends CSP {
 
     public void initExampleProblem() {
         // VARIABLES
-        Variable WA = new Variable("Western Australia");
-        Variable NT = new Variable("Northern Territory");
-        Variable SA = new Variable("South Australia");
-        Variable Q = new Variable("Queensland");
-        Variable NSW = new Variable("New South Wales");
-        Variable V = new Variable("Victoria");
-        Variable T = new Variable("Tasmania");
+        Variable WA = new Variable<String>("Western Australia");
+        Variable NT = new Variable<String>("Northern Territory");
+        Variable SA = new Variable<String>("South Australia");
+        Variable Q = new Variable<String>("Queensland");
+        Variable NSW = new Variable<String>("New South Wales");
+        Variable V = new Variable<String>("Victoria");
+        Variable T = new Variable<String>("Tasmania");
 
         ArrayList<Variable> coloringVariables = new ArrayList<>();
         coloringVariables.add(WA);
@@ -66,15 +147,15 @@ public class ColoringCSP extends CSP {
         this.domain = new Domain<>(coloringValues);
 
         //CONSTRAINTS
-        Constraint wa_nt = new MapColoringConstraint(WA, NT);
-        Constraint wa_sa = new MapColoringConstraint(WA, SA);
-        Constraint nt_sa = new MapColoringConstraint(NT, SA);
-        Constraint nt_q = new MapColoringConstraint(NT, Q);
-        Constraint sa_q = new MapColoringConstraint(SA, Q);
-        Constraint sa_nsw = new MapColoringConstraint(SA, NSW);
-        Constraint sa_v = new MapColoringConstraint(SA, V);
-        Constraint q_nsw = new MapColoringConstraint(Q, NSW);
-        Constraint nsw_v = new MapColoringConstraint(NSW, V);
+        Constraint wa_nt = new ColoringConstraint(WA, NT);
+        Constraint wa_sa = new ColoringConstraint(WA, SA);
+        Constraint nt_sa = new ColoringConstraint(NT, SA);
+        Constraint nt_q = new ColoringConstraint(NT, Q);
+        Constraint sa_q = new ColoringConstraint(SA, Q);
+        Constraint sa_nsw = new ColoringConstraint(SA, NSW);
+        Constraint sa_v = new ColoringConstraint(SA, V);
+        Constraint q_nsw = new ColoringConstraint(Q, NSW);
+        Constraint nsw_v = new ColoringConstraint(NSW, V);
 
         ArrayList<Constraint> coloringConstraints = new ArrayList<>();
         coloringConstraints.add(wa_nt);
@@ -88,20 +169,21 @@ public class ColoringCSP extends CSP {
         coloringConstraints.add(nsw_v);
 
         this.constraints = coloringConstraints;
-
     }
-
 
     public static void main(String[] args) {
         //PROBLEM
         ColoringCSP coloringProblem = new ColoringCSP();
-        coloringProblem.initExampleProblem();
+        //coloringProblem.initExampleProblem();
+        coloringProblem.initRandomProblem(3, 5, 5, 5);
 
         HashMap<Variable, Value> assignments = new HashMap<>();
         //ArrayList<LinkedHashMap<Variable, Value>> allAssignments = new ArrayList<>();
-        coloringProblem.solveWithBacktracking(assignments);
+        boolean res = coloringProblem.solveWithBacktracking(assignments);
 
-        System.out.println(assignments);
-
+        if(res)
+            System.out.println(assignments);
+        else
+            System.out.println("error");
     }
 }

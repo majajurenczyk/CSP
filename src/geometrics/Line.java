@@ -14,6 +14,14 @@ public class Line {
     }
 
     private static boolean doIntersect(Point p1, Point q1, Point p2, Point q2) {
+
+        if((p1.equals(p2) && !q1.equals(q2)) ||
+                (p1.equals(q2) && !q1.equals(p2)) ||
+                (q1.equals(p2) && !p1.equals(q2)) ||
+                (q1.equals(q2) && !p1.equals(p2))){
+            return false;
+        }
+
         // Find the four orientations needed for general and
         // special cases
         int o1 = orientation(p1, q1, p2);
@@ -41,9 +49,9 @@ public class Line {
         return false; // Doesn't fall in any of the above cases
     }
 
-    private static boolean onSegment(Point p, Point q, Point r) {
-        return q.x <= Math.max(p.x, r.x) && q.x >= Math.min(p.x, r.x) &&
-                q.y <= Math.max(p.y, r.y) && q.y >= Math.min(p.y, r.y);
+    public static boolean onSegment(Point p, Point q, Point r) {
+        return q.x < Math.max(p.x, r.x) && q.x > Math.min(p.x, r.x) &&
+                q.y < Math.max(p.y, r.y) && q.y > Math.min(p.y, r.y);
     }
 
     private static int orientation(Point p, Point q, Point r) {
@@ -62,5 +70,19 @@ public class Line {
 
     public Point getEnd() {
         return end;
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if(obj instanceof Line)
+            return (start.equals(((Line)obj).start) && end.equals(((Line)obj).end)) ||
+                    (start.equals(((Line)obj).end) && end.equals(((Line)obj).start));
+        return false;
+
+    }
+
+    @Override
+    public String toString() {
+        return "["+start.toString() + " ; " + end.toString() + "]";
     }
 }

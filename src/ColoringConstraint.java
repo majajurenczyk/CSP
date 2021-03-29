@@ -3,13 +3,14 @@ import sun.awt.SunHints;
 import java.util.ArrayList;
 import java.util.HashMap;
 
-public class MapColoringConstraint extends Constraint {
+public class ColoringConstraint extends Constraint {
 
-    public MapColoringConstraint(Variable firstVar, Variable secondVar){
+    public ColoringConstraint(Variable firstVar, Variable secondVar){
         super.associatedVariables = new ArrayList<>();
         super.associatedVariables.add(firstVar);
         super.associatedVariables.add(secondVar);
     }
+
 
     @Override
     boolean testConsistency(HashMap<Variable, Value> assignments) {
