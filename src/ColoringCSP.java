@@ -183,12 +183,16 @@ public class ColoringCSP extends CSP {
         ColoringCSP coloringProblem = new ColoringCSP();
         coloringProblem.initRandomProblem(3, 5, 5, 5);
 
-        ArrayList<HashMap<Variable, Value>> allAss = new ArrayList<>();
+        HashMap<Variable, Value> ass = new HashMap<>();
+        coloringProblem.solveWithBacktracking(ass);
+
+        /*ArrayList<HashMap<Variable, Value>> allAss = new ArrayList<>();
         coloringProblem.solveWithBacktrackingAll(allAss);
 
         for (HashMap ass : allAss) {
             System.out.println(ass);
             System.out.println("====");
-        }
+        }*/
+
     }
 }

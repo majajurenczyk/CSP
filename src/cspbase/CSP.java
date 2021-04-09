@@ -37,48 +37,65 @@ public abstract class CSP {
         return -1;
     }
 
-    private int chooseNextVariableMRV(HashMap<Variable, Value> assignments){
-        HashMap<Variable, Integer> unassignedVariableWithIndex = new HashMap<>();
+    private int chooseNextVariableMRV(HashMap<Variable, Value> assignments) { //find Variable with the smallest domain
+        HashMap<Integer, Variable> unassignedVariablesWithIndex = new HashMap<>();
         for (int variableIndex = 0; variableIndex < variables.size(); variableIndex++) {
-            if(!assignments.containsKey(variables.get(variableIndex))) {
-                unassignedVariableWithIndex.put(variables.get(variableIndex), variableIndex);
+            if (!assignments.containsKey(variables.get(variableIndex))) {
+                unassignedVariablesWithIndex.put(variableIndex, variables.get(variableIndex));
             }
         }
-        HashMap<Variable, Integer> variableWithNumberOfConstraints = countVariableNumberOfConstraints(unassignedVariableWithIndex, assignments);
-        return unassignedVariableWithIndex.get(findMostConstrainedVariable(variableWithNumberOfConstraints));
+        return findSmallestDomainIndex(unassignedVariablesWithIndex);
     }
 
-    private HashMap<Variable, Integer> countVariableNumberOfConstraints(HashMap<Variable, Integer> unassignedVars, HashMap<Variable, Value> assignments){
-        HashMap<Variable, Integer> variableWithNumberOfConstraints = new HashMap<>();
-        for (Variable unassignedVar : unassignedVars.keySet()){
-            for(Variable assignedVar : assignments.keySet()){
-                for(Constraint con : constraints){
-                    if(con.associatedVariables.contains(unassignedVar) && con.associatedVariables.contains(assignedVar)){
-                        if(variableWithNumberOfConstraints.containsKey(unassignedVar)){
-                            variableWithNumberOfConstraints.put(unassignedVar, 1);
-                        }
-                        else{
-                            variableWithNumberOfConstraints.put(unassignedVar, variableWithNumberOfConstraints.get(unassignedVar) + 1);
-                        }
-                    }
+    private int findSmallestDomainIndex(HashMap<Integer, Variable> unassignedVariablesWithIndex){
+        int smallestDomainIndex = -1;
+        int smallestDomainSize = Integer.MAX_VALUE;
+
+        for(int index : unassignedVariablesWithIndex.keySet()){
+            if(domain.get(index).getDomainValues().size() < smallestDomainSize){
+                smallestDomainIndex = index;
+                smallestDomainSize = domain.get(index).getDomainValues().size();
+            }
+        }
+        return  smallestDomainIndex;
+    }
+
+    //BACKTRACKING - ONE SOLUTION
+
+    public boolean solveWithBacktracking(HashMap<Variable, Value> assignments){
+        return solveWithBacktrackingRecursive(assignments);
+    }
+
+
+    private boolean solveWithBacktrackingRecursive(HashMap<Variable, Value> assignments){
+        if(assignments.size() == variables.size()) //if assignments completed
+            return true;
+        int actVariableIndex = chooseNextVariableMRV(assignments);
+        Variable actVariable = variables.get(actVariableIndex);
+
+        for (Object val: domain.get(actVariableIndex).getDomainValues()) {
+            assignments.put(actVariable, (Value)val);
+            boolean ifConsistentWithAllConstraint = true;
+            for (Constraint c: constraints) {
+                if(c.testConsistency(assignments)){
+                    ifConsistentWithAllConstraint = false;
+                    break;
                 }
             }
-        }
-        return variableWithNumberOfConstraints;
-    }
-
-    private Variable findMostConstrainedVariable(HashMap<Variable, Integer> variableWithNumberOfConstraints){
-        Variable maxVar = null;
-        int maxCon = Integer.MIN_VALUE;
-
-        for(Variable var : variableWithNumberOfConstraints.keySet()){
-            if(variableWithNumberOfConstraints.get(var) > maxCon){
-                maxVar = var;
-                maxCon = variableWithNumberOfConstraints.get(var);
+            assignments.remove(actVariable);
+            if(ifConsistentWithAllConstraint){
+                assignments.put(actVariable, (Value)val);
+                boolean result = solveWithBacktrackingRecursive(assignments);
+                if(result){
+                    return true;
+                }
+                assignments.remove(actVariable);
             }
         }
-        return maxVar;
+        return false;
     }
+
+    //FIND ALL SOLUTIONS
 
     public void solveWithBacktrackingAll(ArrayList<HashMap<Variable, Value>> allSolutions){
         HashMap<Variable, Value> assignments = new HashMap<>();
@@ -125,38 +142,4 @@ public abstract class CSP {
     }
 
 
-    //BACKTRACKING - ONE SOLUTION
-
-    public boolean solveWithBacktracking(HashMap<Variable, Value> assignments){
-        return solveWithBacktrackingRecursive(assignments);
-    }
-
-
-    private boolean solveWithBacktrackingRecursive(HashMap<Variable, Value> assignments){
-        if(assignments.size() == variables.size()) //if assignments completed
-            return true;
-        int actVariableIndex = chooseNextVariable(assignments);
-        Variable actVariable = variables.get(actVariableIndex);
-
-        for (Object val: domain.get(actVariableIndex).getDomainValues()) {
-            assignments.put(actVariable, (Value)val);
-            boolean ifConsistentWithAllConstraint = true;
-            for (Constraint c: constraints) {
-                if(c.testConsistency(assignments)){
-                    ifConsistentWithAllConstraint = false;
-                    break;
-                }
-            }
-            assignments.remove(actVariable);
-            if(ifConsistentWithAllConstraint){
-                assignments.put(actVariable, (Value)val);
-                boolean result = solveWithBacktrackingRecursive(assignments);
-                if(result){
-                    return true;
-                }
-                assignments.remove(actVariable);
-            }
-        }
-        return false;
-    }
 }
