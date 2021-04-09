@@ -15,7 +15,7 @@ public class ColoringVisualisation extends Application {
     private Scene drawBoard() {
         //SOLUTION
         ColoringCSP coloringProblem = new ColoringCSP();
-        coloringProblem.initRandomProblem(8, 50, 10, 10);
+        coloringProblem.initRandomProblem(8, 70, 10, 15);
 
         //COLORS
         Color [] colors = getColors();

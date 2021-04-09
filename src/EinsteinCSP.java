@@ -6,7 +6,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 public class EinsteinCSP extends CSP {
-    public EinsteinCSP(ArrayList<Variable> vars, ArrayList<Constraint> cons, Domain dom) {
+    public EinsteinCSP(ArrayList<Variable> vars, ArrayList<Constraint> cons, ArrayList<Domain> dom) {
         super(vars, cons, dom);
     }
 
@@ -80,7 +80,10 @@ public class EinsteinCSP extends CSP {
 
         //INIT DOMAIN
 
-        this.domain = new Domain<>(values);
+        this.domain = new ArrayList<>();
+        for(int i = 0; i < variables.size(); i++){
+            this.domain.add(new Domain<>(values));
+        }
 
         //CONSTRAINTS
 

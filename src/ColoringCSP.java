@@ -6,7 +6,7 @@ import geometrics.Point;
 
 public class ColoringCSP extends CSP {
 
-    public ColoringCSP(ArrayList<Variable> vars, ArrayList<Constraint> cons, Domain dom) {
+    public ColoringCSP(ArrayList<Variable> vars, ArrayList<Constraint> cons, ArrayList<Domain> dom) {
         super(vars, cons, dom);
     }
 
@@ -20,13 +20,15 @@ public class ColoringCSP extends CSP {
         for(int i = 0; i < numberOfColors; i++){
             colors.add(new Value<>(i));
         }
-        this.domain = new Domain<>(colors);
+        this.domain = new ArrayList<>();
+
         
         //INIT VARIABLES
         this.variables = new ArrayList<>();
         ArrayList<Point> drawnPoints = drawRandomProblemPoints(numberOfRegions, allRegionsHeight, allRegionsWidth);
         for (Point p: drawnPoints) {
             this.variables.add(new Variable<>(p));
+            this.domain.add(new Domain<>(colors));
         }
 
         //INIT CONSTRAINTS
@@ -144,8 +146,12 @@ public class ColoringCSP extends CSP {
         coloringValues.add(green);
         coloringValues.add(blue);
 
+        this.domain = new ArrayList<>();
         //DOMAIN
-        this.domain = new Domain<>(coloringValues);
+        for(int i = 0; i < getVariables().size(); i++){
+            this.domain.add(new Domain<>(coloringValues));
+        }
+
 
         //CONSTRAINTS
         Constraint wa_nt = new ColoringConstraint(WA, NT);

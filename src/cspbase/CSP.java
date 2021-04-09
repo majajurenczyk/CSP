@@ -1,15 +1,14 @@
 package cspbase;
-
 import java.util.*;
 
 public abstract class CSP {
     protected ArrayList<Variable> variables;
     protected ArrayList<Constraint> constraints;
-    protected Domain domain;
+    protected ArrayList<Domain> domain;
 
     //CONSTRUCTORS
 
-    public CSP(ArrayList<Variable> vars, ArrayList<Constraint> cons, Domain dom) {
+    public CSP(ArrayList<Variable> vars, ArrayList<Constraint> cons, ArrayList<Domain> dom) {
         this.variables = vars;
         this.constraints = cons;
         this.domain = dom;
@@ -37,6 +36,50 @@ public abstract class CSP {
         }
         return -1;
     }
+
+    private int chooseNextVariableMRV(HashMap<Variable, Value> assignments){
+        HashMap<Variable, Integer> unassignedVariableWithIndex = new HashMap<>();
+        for (int variableIndex = 0; variableIndex < variables.size(); variableIndex++) {
+            if(!assignments.containsKey(variables.get(variableIndex))) {
+                unassignedVariableWithIndex.put(variables.get(variableIndex), variableIndex);
+            }
+        }
+        HashMap<Variable, Integer> variableWithNumberOfConstraints = countVariableNumberOfConstraints(unassignedVariableWithIndex, assignments);
+        return unassignedVariableWithIndex.get(findMostConstrainedVariable(variableWithNumberOfConstraints));
+    }
+
+    private HashMap<Variable, Integer> countVariableNumberOfConstraints(HashMap<Variable, Integer> unassignedVars, HashMap<Variable, Value> assignments){
+        HashMap<Variable, Integer> variableWithNumberOfConstraints = new HashMap<>();
+        for (Variable unassignedVar : unassignedVars.keySet()){
+            for(Variable assignedVar : assignments.keySet()){
+                for(Constraint con : constraints){
+                    if(con.associatedVariables.contains(unassignedVar) && con.associatedVariables.contains(assignedVar)){
+                        if(variableWithNumberOfConstraints.containsKey(unassignedVar)){
+                            variableWithNumberOfConstraints.put(unassignedVar, 1);
+                        }
+                        else{
+                            variableWithNumberOfConstraints.put(unassignedVar, variableWithNumberOfConstraints.get(unassignedVar) + 1);
+                        }
+                    }
+                }
+            }
+        }
+        return variableWithNumberOfConstraints;
+    }
+
+    private Variable findMostConstrainedVariable(HashMap<Variable, Integer> variableWithNumberOfConstraints){
+        Variable maxVar = null;
+        int maxCon = Integer.MIN_VALUE;
+
+        for(Variable var : variableWithNumberOfConstraints.keySet()){
+            if(variableWithNumberOfConstraints.get(var) > maxCon){
+                maxVar = var;
+                maxCon = variableWithNumberOfConstraints.get(var);
+            }
+        }
+        return maxVar;
+    }
+
     public void solveWithBacktrackingAll(ArrayList<HashMap<Variable, Value>> allSolutions){
         HashMap<Variable, Value> assignments = new HashMap<>();
         solveWithBacktrackingRecursiveAll(allSolutions, assignments);
@@ -49,7 +92,7 @@ public abstract class CSP {
         if (actVariableIndex == -1)
             return;
         Variable actVariable = variables.get(actVariableIndex);
-        for (Object val: domain.getDomainValues()) {
+        for (Object val: domain.get(actVariableIndex).getDomainValues()) {
             assignments.put(actVariable, (Value)val);
             boolean ifConsistentWithAllConstraint = true;
             for (Constraint c: constraints) {
@@ -95,7 +138,7 @@ public abstract class CSP {
         int actVariableIndex = chooseNextVariable(assignments);
         Variable actVariable = variables.get(actVariableIndex);
 
-        for (Object val: domain.getDomainValues()) {
+        for (Object val: domain.get(actVariableIndex).getDomainValues()) {
             assignments.put(actVariable, (Value)val);
             boolean ifConsistentWithAllConstraint = true;
             for (Constraint c: constraints) {
