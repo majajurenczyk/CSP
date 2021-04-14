@@ -152,10 +152,12 @@ public class EinsteinCSP extends CSP {
         problem.initProblem();
 
         HashMap<Variable, Value> assignments = new HashMap<>();
-        boolean res = problem.solveWithBacktracking(assignments, "base", "base", "base");
+        //ArrayList<HashMap<Variable, Value>> allAss = new ArrayList<>();
+        boolean res = problem.solveWithBacktracking( assignments, "lcv", "mrv", "base");
 
         if(res){
             showAssignmentsByValue(assignments);
+            System.out.println(problem.visitedNodes);
         }
         else{
             System.out.println("ERROR");

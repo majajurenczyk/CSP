@@ -20,7 +20,7 @@ public class ColoringVisualisation extends Application {
         //COLORS
         Color [] colors = getColors();
         HashMap<Variable, Value> assignments = new HashMap<>();
-        boolean res = coloringProblem.solveWithBacktracking(assignments, "base",  "base", "base");
+        boolean res = coloringProblem.solveWithBacktracking(assignments, "lcv",  "mrv", "fc");
 
         Group gr = new Group();
 

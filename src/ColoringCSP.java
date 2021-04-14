@@ -181,11 +181,19 @@ public class ColoringCSP extends CSP {
     public static void main(String[] args) {
         //PROBLEM
         ColoringCSP coloringProblem = new ColoringCSP();
-        coloringProblem.initRandomProblem(3, 5, 5, 5);
+        coloringProblem.initRandomProblem(4, 10, 10, 10);
 
-        HashMap<Variable, Value> ass = new HashMap<>();
-        System.out.println(coloringProblem.solveWithBacktracking(ass, "lcv", "mrv", "fc"));
+        ArrayList<HashMap<Variable, Value>> allAss = new ArrayList<>();
 
+        //HashMap<Variable, Value> ass = new HashMap<>();
+        coloringProblem.solveWithBacktrackingAll(allAss, "BASE", "LCV", "FC");
+
+        if(allAss.size() > 0){
+            System.out.println(coloringProblem.visitedNodes);
+        }
+        else{
+            System.out.println("ERROR");
+        }
         /*ArrayList<HashMap<Variable, Value>> allAss = new ArrayList<>();
         coloringProblem.solveWithBacktrackingAll(allAss);
 
@@ -193,6 +201,5 @@ public class ColoringCSP extends CSP {
             System.out.println(ass);
             System.out.println("====");
         }*/
-
     }
 }

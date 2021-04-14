@@ -1,11 +1,14 @@
 package cspbase;
 
+import java.lang.reflect.Array;
 import java.util.*;
 
 public abstract class CSP {
     protected ArrayList<Variable> variables;
     protected ArrayList<Constraint> constraints;
     protected ArrayList<Domain> domain;
+
+    public int visitedNodes = 0;
 
     //CONSTRUCTORS
 
@@ -28,56 +31,61 @@ public abstract class CSP {
         return variables;
     }
 
-    //BACKTRACKING - ALL SOLUTIONS
+    //HEURISTICS
 
-    private int chooseNextVariable(HashMap<Variable, Value> assignments) { //return index?
+    //MRV
+
+    private int chooseNextVariableMRV(HashMap<Variable, Value> assignments, ArrayList<Domain> domain) { //find unassigned Variable with the smallest domain
+        ArrayList<Integer> unassignedVariablesIndexes = findUnassignedVarsIndexes(assignments);
+        return findSmallestDomainIndex(unassignedVariablesIndexes, domain);
+    }
+
+    private ArrayList<Integer> findUnassignedVarsIndexes(HashMap<Variable, Value> assignments) { //finds indexes of unassigned variables
+        ArrayList<Integer> indexesOfUnassignedVars = new ArrayList<>();
         for (int variableIndex = 0; variableIndex < variables.size(); variableIndex++) {
             if (!assignments.containsKey(variables.get(variableIndex))) {
-                return variableIndex;
+                indexesOfUnassignedVars.add(variableIndex);
             }
         }
-        return -1;
+        return indexesOfUnassignedVars;
     }
 
-    private HashMap<Integer, Variable> findUnassignedVarsIndexes(HashMap<Variable, Value> assignments) {
-        HashMap<Integer, Variable> unassignedVariablesWithIndex = new HashMap<>();
-        for (int variableIndex = 0; variableIndex < variables.size(); variableIndex++) {
-            if (!assignments.containsKey(variables.get(variableIndex))) {
-                unassignedVariablesWithIndex.put(variableIndex, variables.get(variableIndex));
+    private int findSmallestDomainIndex(ArrayList<Integer> unassignedVariablesIndexes, ArrayList<Domain> domain) {
+        int smallestDomainIndex = -1;
+        int smallestDomainSize = Integer.MAX_VALUE;
+
+        for (int index : unassignedVariablesIndexes) {
+            if (domain.get(index).getDomainValues().size() < smallestDomainSize) {
+                smallestDomainIndex = index;
+                smallestDomainSize = domain.get(index).getDomainValues().size();
             }
         }
-        return unassignedVariablesWithIndex;
+        return smallestDomainIndex;
     }
 
-    private int chooseNextVariableMRV(HashMap<Variable, Value> assignments) { //find Variable with the smallest domain
-        HashMap<Integer, Variable> unassignedVariablesWithIndex = findUnassignedVarsIndexes(assignments);
-        return findSmallestDomainIndex(unassignedVariablesWithIndex);
-    }
+    //LCV
 
+    @SuppressWarnings("unchecked")
     private void sortDomainLCV(Variable var, Domain domain, HashMap<Variable, Value> assignments) {
         ArrayList<Variable> constraintNeighbours = findConstraintNeighbours(var); //ALL VARIABLES IN CONSTRAINT WITH CHOSEN VARIABLE
-        for (Variable variable : assignments.keySet()) {
-            constraintNeighbours.remove(variable); //ONLY UNASSIGNED CONSTRAINT NEIGHBORS
-        }
+
+        constraintNeighbours.removeAll(assignments.keySet()); //ONLY UNASSIGNED CONSTRAINT NEIGHBORS
+
         HashMap<Value, Integer> choicesForNeighborsWithValue = new HashMap<>(); //HOW MANY CHOICES IS LEFT FOR NEIGHBORS FOR SPECIFIC VALUE IN DOMAIN
         for (Object val : domain.getDomainValues()) {
             choicesForNeighborsWithValue.put((Value) val, 0);
         }
-
         for (Value val : choicesForNeighborsWithValue.keySet()) {
             for (Variable variable : constraintNeighbours) {
                 assignments.put(variable, val);
-                if (ifConsistentWithAllConstraints(assignments)){
+                if (!ifConsistentWithAllConstraints(assignments)){
                     choicesForNeighborsWithValue.put(val, choicesForNeighborsWithValue.get(val) + 1);
                 }
-                assignments.remove(var);
+                assignments.remove(variable);
             }
         }
-        System.out.println(domain.getDomainValues());
-        domain.getDomainValues().sort((Object v1, Object v2) -> -1*(choicesForNeighborsWithValue.get((Value)v1).compareTo(choicesForNeighborsWithValue.get((Value)v2))));
-        System.out.println(domain.getDomainValues());
+        ((Domain<Object>)domain).getDomainValues().sort((Object v1, Object v2) -> -1*(choicesForNeighborsWithValue.get((Value)v1).compareTo(choicesForNeighborsWithValue.get((Value)v2))));
     }
-
 
     private ArrayList<Variable> findConstraintNeighbours(Variable var) {
         ArrayList<Variable> resultVars = new ArrayList<>();
@@ -90,75 +98,66 @@ public abstract class CSP {
         return resultVars;
     }
 
-    private int findSmallestDomainIndex(HashMap<Integer, Variable> unassignedVariablesWithIndex) {
-        int smallestDomainIndex = -1;
-        int smallestDomainSize = Integer.MAX_VALUE;
+    //BACKTRACKING - ALL SOLUTIONS
 
-        for (int index : unassignedVariablesWithIndex.keySet()) {
-            if (domain.get(index).getDomainValues().size() < smallestDomainSize) {
-                smallestDomainIndex = index;
-                smallestDomainSize = domain.get(index).getDomainValues().size();
+    private int chooseNextVariable(HashMap<Variable, Value> assignments) {
+        for (int variableIndex = 0; variableIndex < variables.size(); variableIndex++) {
+            if (!assignments.containsKey(variables.get(variableIndex))) {
+                return variableIndex;
             }
         }
-        return smallestDomainIndex;
+        return -1;
     }
 
-
-    private ArrayList<Domain> fixDomainsFC(HashMap<Variable, Value> allAssignments, Variable assignedVar, Value assignedVal) {
-        HashMap<Integer, Variable> unassignedVariablesWithIndex = findUnassignedVarsIndexes(allAssignments);
-        ArrayList<Domain> result = new ArrayList<>();
-
-        for (Domain dom : domain) {
-            result.add(dom.copyDomain());
-        }
-
-        for (int unassignedVarIndex : unassignedVariablesWithIndex.keySet()) {
+    private void fixDomainsFC(HashMap<Variable, Value> allAssignments, ArrayList<Domain> domain, Variable assignedVar) {
+        ArrayList<Integer> unassignedVariablesIndexes = findUnassignedVarsIndexes(allAssignments);
+        for (int unassignedVarIndex : unassignedVariablesIndexes) {
             for (Constraint constraint : constraints) {
-                if (constraint.associatedVariables.contains(assignedVar) && constraint.associatedVariables.contains(unassignedVariablesWithIndex.get(unassignedVarIndex))) {
-                    ArrayList<Object> domainValues = new ArrayList<Object>(result.get(unassignedVarIndex).getDomainValues());
+                if (constraint.associatedVariables.contains(assignedVar) && constraint.associatedVariables.contains(variables.get(unassignedVarIndex))){
+                    ArrayList<Object> domainValues = new ArrayList<Object>(domain.get(unassignedVarIndex).getDomainValues());
                     for (Object val : domainValues) {
-                        if (constraint.testValuesConsistency(new Value[]{(Value) val, assignedVal})) {
-                            result.get(unassignedVarIndex).getDomainValues().remove((Value) val);
+                        allAssignments.put(variables.get(unassignedVarIndex), (Value)val);
+                        if (constraint.testConsistency(allAssignments)) {
+                            domain.get(unassignedVarIndex).getDomainValues().remove((Value)val);
                         }
+                        allAssignments.remove(variables.get(unassignedVarIndex));
                     }
                 }
             }
         }
-        return result;
     }
 
     //BACKTRACKING - ONE SOLUTION
 
     public boolean solveWithBacktracking(HashMap<Variable, Value> assignments,String valHeuristic, String varHeuristic, String algorithm) {
-        ArrayList<ArrayList<Domain>> stepDomains = new ArrayList<>();
-        stepDomains.add(domain);
-        return solveWithBacktrackingRecursive(assignments, stepDomains, valHeuristic, varHeuristic, algorithm);
+        visitedNodes = 0;
+        return solveWithBacktrackingRecursive(assignments, domain, valHeuristic, varHeuristic, algorithm);
     }
 
 
-    private boolean solveWithBacktrackingRecursive(HashMap<Variable, Value> assignments, ArrayList<ArrayList<Domain>> stepDomain, String valHeuristic,  String varHeuristic, String algorithm) {
+    private boolean solveWithBacktrackingRecursive(HashMap<Variable, Value> assignments, ArrayList<Domain> actDomain, String valHeuristic,  String varHeuristic, String algorithm) {
         if (assignments.size() == variables.size()) //if assignments completed
             return true;
-        int actVariableIndex = chooseNextVariableByHeuristic(varHeuristic, assignments);
+        int actVariableIndex = chooseNextVariableByHeuristic(varHeuristic, assignments, actDomain);
         Variable actVariable = variables.get(actVariableIndex);
 
-        Domain actDomain = stepDomain.get(stepDomain.size() - 1).get(actVariableIndex);
+        Domain actVarDomain = actDomain.get(actVariableIndex);
+        sortDomainByHeuristic(actVariable, actVarDomain, valHeuristic, assignments);
 
-        sortDomainByHeuristic(actVariable, actDomain, valHeuristic, assignments);
-
-        for (Object val : new ArrayList<Object>(stepDomain.get(stepDomain.size() - 1).get(actVariableIndex).getDomainValues())) {
-            assignments.put(actVariable, (Value) val);
+        for (Object val : new ArrayList<Object>(actVarDomain.getDomainValues())) {
+            assignments.put(actVariable, (Value)val);
             boolean ifConsistentWithAllConstraint = ifConsistentWithAllConstraints(assignments);
             assignments.remove(actVariable);
             if (ifConsistentWithAllConstraint) {
                 assignments.put(actVariable, (Value) val);
-                stepDomain.add(fixDomainsByAlgorithm(algorithm, assignments, actVariable, (Value) val));
-                boolean result = solveWithBacktrackingRecursive(assignments, stepDomain, valHeuristic, varHeuristic, algorithm);
+                visitedNodes++;
+                ArrayList<Domain> newActDom = copyDomains(actDomain);
+                fixDomainsByAlgorithm(algorithm, assignments, newActDom, actVariable);
+                boolean result = solveWithBacktrackingRecursive(assignments, newActDom, valHeuristic, varHeuristic, algorithm);
                 if (result) {
                     return true;
                 }
                 assignments.remove(actVariable);
-                stepDomain.remove(stepDomain.size() - 1);
             }
         }
         return false;
@@ -175,7 +174,7 @@ public abstract class CSP {
         return ifConsistentWithAllConstraint;
     }
 
-    private ArrayList<Domain> copyDomains() {
+    private ArrayList<Domain> copyDomains(ArrayList<Domain> domain) {
         ArrayList<Domain> copiedDomains = new ArrayList<>();
         for (Domain dom : domain) {
             copiedDomains.add(dom.copyDomain());
@@ -183,9 +182,9 @@ public abstract class CSP {
         return copiedDomains;
     }
 
-    private int chooseNextVariableByHeuristic(String heuristic, HashMap<Variable, Value> assignments) {
+    private int chooseNextVariableByHeuristic(String heuristic, HashMap<Variable, Value> assignments, ArrayList<Domain> domain) {
         if (heuristic.toLowerCase().equals("mrv"))
-            return chooseNextVariableMRV(assignments);
+            return chooseNextVariableMRV(assignments, domain);
         else
             return chooseNextVariable(assignments);
     }
@@ -196,41 +195,45 @@ public abstract class CSP {
         }
     }
 
-    private ArrayList<Domain> fixDomainsByAlgorithm(String algorithm, HashMap<Variable, Value> assignments, Variable newVar, Value newVal) {
+    private void fixDomainsByAlgorithm(String algorithm, HashMap<Variable, Value> assignments, ArrayList<Domain> domain, Variable newVar) {
         if (algorithm.toLowerCase().equals("fc"))
-            return fixDomainsFC(assignments, newVar, newVal);
-        else
-            return copyDomains();
+            fixDomainsFC(assignments, domain, newVar);
+
     }
 
     //FIND ALL SOLUTIONS
 
-    public void solveWithBacktrackingAll(ArrayList<HashMap<Variable, Value>> allSolutions) {
+    public void solveWithBacktrackingAll(ArrayList<HashMap<Variable, Value>> allSolutions, String valHeuristic,  String varHeuristic, String algorithm) {
+        visitedNodes = 0;
         HashMap<Variable, Value> assignments = new HashMap<>();
-        solveWithBacktrackingRecursiveAll(allSolutions, assignments);
+        solveWithBacktrackingRecursiveAll(allSolutions, assignments, domain, valHeuristic, varHeuristic, algorithm);
     }
 
 
-    private void solveWithBacktrackingRecursiveAll(ArrayList<HashMap<Variable, Value>> allSolutions, HashMap<Variable, Value> assignments) {
+    private void solveWithBacktrackingRecursiveAll(ArrayList<HashMap<Variable, Value>> allSolutions, HashMap<Variable, Value> assignments, ArrayList<Domain> actDomain, String valHeuristic,  String varHeuristic, String algorithm) {
         if (assignments.size() == variables.size()) //if assignments completed
             allSolutions.add(copyAssignments(assignments));
-        int actVariableIndex = chooseNextVariable(assignments);
+        int actVariableIndex = chooseNextVariableByHeuristic(varHeuristic, assignments, actDomain);
+
         if (actVariableIndex == -1)
             return;
+
         Variable actVariable = variables.get(actVariableIndex);
-        for (Object val : domain.get(actVariableIndex).getDomainValues()) {
-            assignments.put(actVariable, (Value) val);
-            boolean ifConsistentWithAllConstraint = true;
-            for (Constraint c : constraints) {
-                if (c.testConsistency(assignments)) {
-                    ifConsistentWithAllConstraint = false;
-                    break;
-                }
-            }
+
+        Domain actVarDomain = actDomain.get(actVariableIndex);
+        sortDomainByHeuristic(actVariable, actVarDomain, valHeuristic, assignments);
+
+        for (Object val : new ArrayList<Object>(actVarDomain.getDomainValues())) {
+            System.out.println(actDomain);
+            assignments.put(actVariable, (Value)val);
+            boolean ifConsistentWithAllConstraint = ifConsistentWithAllConstraints(assignments);
             assignments.remove(actVariable);
+            visitedNodes++;
             if (ifConsistentWithAllConstraint) {
                 assignments.put(actVariable, (Value) val);
-                solveWithBacktrackingRecursiveAll(allSolutions, assignments);
+                ArrayList<Domain> newActDom = copyDomains(actDomain);
+                fixDomainsByAlgorithm(algorithm, assignments, newActDom, actVariable);
+                solveWithBacktrackingRecursiveAll(allSolutions, assignments, newActDom, valHeuristic, varHeuristic, algorithm);
                 assignments.remove(actVariable); //backtrack
             }
         }
