@@ -1,6 +1,5 @@
-package cspbase;
+package com.csp.cspbase;
 
-import java.lang.reflect.Array;
 import java.util.*;
 
 public abstract class CSP {

@@ -1,4 +1,4 @@
-package geometrics;
+package com.csp.geometrics;
 
 public class Line {
     private Point start;

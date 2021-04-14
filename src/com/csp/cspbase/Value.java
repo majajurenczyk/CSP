@@ -1,4 +1,4 @@
-package cspbase;
+package com.csp.cspbase;
 
 public class Value <T> {
     private T value;

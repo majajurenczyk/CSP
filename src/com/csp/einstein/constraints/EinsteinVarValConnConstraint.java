@@ -1,7 +1,8 @@
-import cspbase.Constraint;
-import cspbase.Value;
-import cspbase.Variable;
-import sun.awt.SunHints;
+package com.csp.einstein.constraints;
+
+import com.csp.cspbase.Constraint;
+import com.csp.cspbase.Value;
+import com.csp.cspbase.Variable;
 
 import java.util.ArrayList;
 import java.util.HashMap;

@@ -1,4 +1,4 @@
-package geometrics;
+package com.csp.geometrics;
 
 import java.util.ArrayList;
 

@@ -1,8 +1,11 @@
+package com.csp.coloring;
+
 import java.util.*;
 
-import cspbase.*;
-import geometrics.Line;
-import geometrics.Point;
+import com.csp.coloring.constraints.ColoringConstraint;
+import com.csp.cspbase.*;
+import com.csp.geometrics.Line;
+import com.csp.geometrics.Point;
 
 public class ColoringCSP extends CSP {
 

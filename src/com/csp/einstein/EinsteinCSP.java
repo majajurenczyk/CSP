@@ -1,4 +1,7 @@
-import cspbase.*;
+package com.csp.einstein;
+
+import com.csp.cspbase.*;
+import com.csp.einstein.constraints.*;
 
 import java.util.ArrayList;
 import java.util.Arrays;

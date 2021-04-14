@@ -1,7 +1,9 @@
-import cspbase.Constraint;
-import cspbase.Value;
-import cspbase.Variable;
-import geometrics.Point;
+package com.csp.coloring;
+
+import com.csp.cspbase.Constraint;
+import com.csp.cspbase.Value;
+import com.csp.cspbase.Variable;
+import com.csp.geometrics.Point;
 import javafx.application.Application;
 import javafx.scene.Group;
 import javafx.scene.Scene;

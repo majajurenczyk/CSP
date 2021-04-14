@@ -1,4 +1,4 @@
-package cspbase;
+package com.csp.cspbase;
 
 public class Variable<T> {
     private static int ID = 1;
