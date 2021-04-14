@@ -15,12 +15,12 @@ public class ColoringVisualisation extends Application {
     private Scene drawBoard() {
         //SOLUTION
         ColoringCSP coloringProblem = new ColoringCSP();
-        coloringProblem.initRandomProblem(8, 70, 10, 15);
+        coloringProblem.initRandomProblem(5, 30, 10, 10);
 
         //COLORS
         Color [] colors = getColors();
         HashMap<Variable, Value> assignments = new HashMap<>();
-        boolean res = coloringProblem.solveWithBacktracking(assignments);
+        boolean res = coloringProblem.solveWithBacktracking(assignments, "base",  "base", "base");
 
         Group gr = new Group();
 

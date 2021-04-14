@@ -6,6 +6,7 @@ public abstract class Constraint {
    protected ArrayList<Variable> associatedVariables;
 
    public abstract boolean testConsistency(HashMap<Variable, Value> assignments);
+   public abstract boolean testValuesConsistency(Value [] values);
 
    public Variable get(int index){
       if(index < 0 || index >= associatedVariables.size()){

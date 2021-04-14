@@ -24,6 +24,11 @@ public class EinsteinVarsConnConstraint extends Constraint { //CHECK IF VALUES F
     public boolean testConsistency(HashMap<Variable, Value> assignments) {
         if(assignments.get(getFirst()) == null || assignments.get(getSecond()) == null)
             return false;
-        return (int) (assignments.get(getFirst()).getValue()) != (int) (assignments.get(getSecond()).getValue());
+       return testValuesConsistency(new Value[]{assignments.get(getFirst()), assignments.get(getSecond())});
+    }
+
+    @Override
+    public boolean testValuesConsistency(Value[] values) {
+        return (int)(values[0].getValue()) != (int)(values[1].getValue());
     }
 }

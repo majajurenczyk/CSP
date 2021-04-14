@@ -31,4 +31,17 @@ public class EinsteinDiffConstraint extends Constraint {
         }
         return false;
     }
+
+    @Override
+    public boolean testValuesConsistency(Value [] values) {
+        return values[0].equals(values[1]);
+        /*for(int i = 0; i < values.length - 1; i++){
+            for(int j = i+1; j < values.length; j++){
+                if(values[i].equals(values[j])){
+                    return false;
+                }
+            }
+        }
+        return true;*/
+    }
 }

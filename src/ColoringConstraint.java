@@ -17,9 +17,14 @@ public class ColoringConstraint extends Constraint {
         Value v1 = assignments.get(super.associatedVariables.get(0));
         Value v2 = assignments.get(super.associatedVariables.get(1));
 
-        if(v1 == null || v2 == null)
+       return testValuesConsistency(new Value[] {v1, v2});
+    }
+
+    @Override
+    public boolean testValuesConsistency(Value[] values) {
+        if(values[0] == null || values[1] == null)
             return false;
         else
-            return v1.equals(v2);
+            return values[0].equals(values[1]);
     }
 }

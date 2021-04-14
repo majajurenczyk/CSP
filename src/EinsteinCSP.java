@@ -110,7 +110,7 @@ public class EinsteinCSP extends CSP {
         EinsteinDiffConstraint colorDiff = new EinsteinDiffConstraint(new ArrayList<Variable>(Arrays.asList(GREEN, YELLOW, BLUE, WHITE, RED)));
 
         this.constraints = new ArrayList<>();
-        this.constraints.addAll(Arrays.asList(con1, con2, con3, con4, con5, con6, con7, con8, con9, con10, con11, con12, con13, con14, con15, nationalityDiff, drinkDiff, animalsDiff, tobaccoDiff, colorDiff));
+        this.constraints.addAll(Arrays.asList(con1, con2, con3, con4, con5, con6, con7, con8, con9, con10, con11, con12, con13, con14, con15,nationalityDiff, drinkDiff, animalsDiff, tobaccoDiff, colorDiff));
     }
 
     private static void showAssignmentsByValue(HashMap<Variable, Value> assignments) {
@@ -152,7 +152,7 @@ public class EinsteinCSP extends CSP {
         problem.initProblem();
 
         HashMap<Variable, Value> assignments = new HashMap<>();
-        boolean res = problem.solveWithBacktracking(assignments);
+        boolean res = problem.solveWithBacktracking(assignments, "base", "base", "base");
 
         if(res){
             showAssignmentsByValue(assignments);

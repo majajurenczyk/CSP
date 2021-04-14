@@ -20,8 +20,8 @@ public class ColoringCSP extends CSP {
         for(int i = 0; i < numberOfColors; i++){
             colors.add(new Value<>(i));
         }
-        this.domain = new ArrayList<>();
 
+        this.domain = new ArrayList<>();
         
         //INIT VARIABLES
         this.variables = new ArrayList<>();
@@ -184,7 +184,7 @@ public class ColoringCSP extends CSP {
         coloringProblem.initRandomProblem(3, 5, 5, 5);
 
         HashMap<Variable, Value> ass = new HashMap<>();
-        coloringProblem.solveWithBacktracking(ass);
+        System.out.println(coloringProblem.solveWithBacktracking(ass, "lcv", "mrv", "fc"));
 
         /*ArrayList<HashMap<Variable, Value>> allAss = new ArrayList<>();
         coloringProblem.solveWithBacktrackingAll(allAss);

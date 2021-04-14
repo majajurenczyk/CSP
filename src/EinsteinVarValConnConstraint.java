@@ -1,6 +1,7 @@
 import cspbase.Constraint;
 import cspbase.Value;
 import cspbase.Variable;
+import sun.awt.SunHints;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -22,6 +23,11 @@ public class EinsteinVarValConnConstraint extends Constraint { //CHECK IF VAR HA
     public boolean testConsistency(HashMap<Variable, Value> assignments) {
         if(assignments.get(this.getVariable()) == null)
             return false;
-        return !(assignments.get(this.getVariable())).equals(val);
+        return testValuesConsistency(new Value [] {assignments.get(getVariable()), val});
+    }
+
+    @Override
+    public boolean testValuesConsistency(Value[] values) {
+        return !values[0].equals(values[1]);
     }
 }

@@ -25,7 +25,12 @@ public class EinsteinLeftNeighbourConstraint extends Constraint {
         if(assignments.get(getFirst()) == null || assignments.get(getSecond()) == null)
             return false;
 
-        int diff = (int)(assignments.get(getFirst()).getValue()) - (int)(assignments.get(getSecond()).getValue());
+        return testValuesConsistency(new Value[]{assignments.get(getFirst()), assignments.get(getSecond())});
+    }
+
+    @Override
+    public boolean testValuesConsistency(Value[] values) {
+        int diff = (int)(values[0].getValue()) - (int)(values[1].getValue());
         return diff != -1;
     }
 }
